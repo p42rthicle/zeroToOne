@@ -35,6 +35,12 @@ console.log()
  * API - expose the environment. 
  * Core - very simple
  * API - say nodejs exposes Location API. (Ability to use locations)
+ * 
+ * 
+ * - Multiple processes for multi threaded nature, not in one process. 
+ * 
+ * 
+ * async{} - break the synchronous flow of the program, but on the same thread.
  */
 
 function complexFn(n) {
