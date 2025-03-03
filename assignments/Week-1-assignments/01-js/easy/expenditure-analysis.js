@@ -9,7 +9,23 @@
 */
 
 function calculateTotalSpentByCategory(transactions) {
-  return [];
+  let categoryWiseMap = {}
+
+  for (let trans of transactions) {
+    var key = trans.category
+    categoryWiseMap[key] = (categoryWiseMap[key] || 0) + trans.price
+  }
+
+  // OR
+  let result = [];
+  for (let key in categoryWiseMap) {
+    result.push({ category: key, totalSpent: categoryWiseMap[key] });
+  }
+
+  return Object.keys(categoryWiseMap).map(category =>({
+    category: category,
+    totalSpent: categoryWiseMap[category]
+  }))
 }
 
 module.exports = calculateTotalSpentByCategory;
