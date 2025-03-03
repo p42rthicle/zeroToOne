@@ -20,3 +20,9 @@ function fileIsRead(err, contents) {
 console.log('Before reading file')
 fs.readFile("chocolates.txt", 'utf8', fileIsRead) // Asynchronous - Offloaded the reading task and below execution continues
 console.log('After reading file')
+
+
+/**
+ * Async Functions - they dont need the JS thread,
+ * they can be offloaded to otherCPU cores and when they finish, execution resumes on the JS thread
+ */
