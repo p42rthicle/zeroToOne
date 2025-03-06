@@ -4,5 +4,13 @@
  */
 
 function sleep (seconds) {
-
+    const start = Date.now();
+    while (Date.now() - start < (seconds * 1000)) {
+        // do nothing
+    }
 }
+let start = Date.now();
+console.log('Before sleep');
+sleep(5);
+let end = Date.now();
+console.log('After sleep' + String(((start - end)/1000)));
