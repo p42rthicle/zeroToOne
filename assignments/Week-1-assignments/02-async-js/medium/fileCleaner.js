@@ -18,6 +18,8 @@ function cleanData(data) {
             foundFirstChar = true;
         }
     }
+    // Or we can use split array(" ") and push not-zero length elememts. 
+    // Then join again with " "
 
     return cleanedData;
 }
