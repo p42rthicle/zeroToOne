@@ -59,3 +59,186 @@ resolve(value) is synchronous in the sense that it sets the state immediately, b
 Calling resolve(value) updates the state and schedules the .then() handler in the microtask queue, ensuring it runs when the call stack is clear.
 11. Is a new Promise object created every time .then() is used?
 Yes, .then() always returns a new Promise, even if it’s linked to the same original Promise.
+
+
+## JavaScript Promises Challenge Notes
+
+### **1. Promise Constructor**
+**Code:**
+```js
+new Promise((resolve, reject) => {
+  console.log('start');
+  resolve(1);
+  console.log('end');
+});
+```
+**Output:**
+```
+start
+1
+end
+```
+**Principle:** Synchronous code is executed first, followed by asynchronous code.
+
+---
+
+### **2. .then()**
+**Code:**
+```js
+Promise.resolve(1).then(() => console.log(2));
+console.log('start');
+console.log(1);
+console.log('end');
+```
+**Output:**
+```
+start
+1
+end
+2
+```
+**Principle:** Synchronous code is executed first, followed by asynchronous code.
+
+---
+
+### **3. resolve()**
+**Code:**
+```js
+new Promise((resolve, reject) => {
+  console.log('start');
+  resolve(1);
+  console.log(3);
+});
+```
+**Output:**
+```
+start
+1
+3
+```
+**Principle:** `resolve()` does not interrupt the execution of the function.
+
+---
+
+### **4. resolve() isn't called**
+**Code:**
+```js
+new Promise((resolve, reject) => {
+  console.log('start');
+  console.log(1);
+});
+```
+**Output:**
+```
+start
+1
+```
+**Principle:** If `resolve()` is not called, the promise remains in the pending state.
+
+---
+
+### **5. The One That's There to Confuse You**
+**Code:**
+```js
+new Promise((resolve, reject) => {
+  console.log('start');
+  setTimeout(() => {
+    console.log('middle');
+    resolve(1);
+  }, 0);
+});
+```
+**Output:**
+```
+start
+middle
+1
+end
+```
+**Principle:** The function inside `setTimeout` is a macrotask, not a microtask.
+
+---
+
+### **6. The One With a Fulfilling Promise**
+**Code:**
+```js
+Promise.resolve(1).then(() => console.log(2));
+console.log('start');
+console.log('end');
+```
+**Output:**
+```
+start
+end
+1
+2
+```
+**Principle:** `Promise.resolve()` returns a fulfilled promise.
+
+---
+
+### **7. setTimeout vs Promise**
+**Code:**
+```js
+setTimeout(() => console.log('setTimeout'), 0);
+Promise.resolve().then(() => console.log('resolve'));
+```
+**Output:**
+```
+start
+end
+resolve
+setTimeout
+```
+**Principle:** Microtasks have higher priority than macrotasks.
+
+---
+
+### **8. Microtasks Mix Macrotasks**
+**Code:**
+```js
+console.log(1);
+Promise.resolve(2).then(() => console.log(3));
+setTimeout(() => console.log(4), 0);
+```
+**Output:**
+```
+1
+3
+2
+4
+```
+**Principle:** Microtasks are executed before macrotasks.
+
+---
+
+### **9. Prioritize Between Microtasks and Macrotasks**
+**Code:**
+```js
+Promise.resolve(1).then(() => console.log(2));
+setTimeout(() => console.log(3), 0);
+```
+**Output:**
+```
+1
+2
+3
+```
+**Principle:** Microtasks have higher priority than macrotasks.
+
+---
+
+### **10. A Typical Interview Question**
+**Code:**
+```js
+Promise.resolve(1).then(() => console.log(2));
+setTimeout(() => console.log(3), 0);
+```
+**Output:**
+```
+1
+2
+3
+```
+**Principle:** Microtasks are executed before macrotasks.
+
