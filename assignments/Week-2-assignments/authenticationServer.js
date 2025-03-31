@@ -31,10 +31,12 @@
 
 const express = require("express")
 const app = express();
-const port = 3000;
+// const port = 3000;
 var bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
 
 let users = [];
+const JWT_SECRET = 'my-super-secret-key-this-is-a-test';
 
 function generateId() {
    return Math.random().toString(36).substring(2, 14) + Date.now().toString(36);
@@ -65,7 +67,7 @@ app.post('/signup', (req, res) => {
     lastName: lastName || ''
   };
   users.push(newUser);
-  res.status(201).send();
+  res.status(201).send('Signup successful');
 });
 
 app.post('/login', (req, res) => {
@@ -80,60 +82,73 @@ app.post('/login', (req, res) => {
     return res.status(401).send('Unauthorized: Invalid credentials');
   }
 
-  const token = Buffer.from(`${username}:${password}`).toString('base64');
-  const userResponse = {
-    token: token,
+  const payload = {
     id: user.id,
-    firstName: user.firstName,
-    lastName: user.lastName
+    username: user.username,
+    firstName: user.firstName
   }
-  res.status(200).json(userResponse);
+
+  try {
+    const token = jwt.sign(
+      payload,
+      JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    const userResponse = {
+      token: token,
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName
+    }
+    res.status(200).json(userResponse);
+  }
+  catch (err) {
+    console.err('Error signing JWT: ', err)
+    res.status(500).send('Internal Server error: Could not generate token')
+  }
 });
 
 // GET /data - Get user data
 app.get('/data', (req, res) => {
   const authHeader = req.headers.authorization;
 
-  if(!authHeader || !authHeader.startsWith('Basic ')) {
-    return res.status(401).send('Unauthorized: Missing or Invalid Authorization header');
+  if(!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).send('Unauthorized: Missing or Invalid Authorization header (expecting Bearer token)');
   }
 
-  const base64Creds = authHeader.split(' ')[1];
-  let credentials;
-  try {
-    credentials = Buffer.from(base64Creds, 'base64').toString('utf-8');
-  } catch (e) {
-    return res.status(401).send('Unauthorized: Invalid Base64 encoding in Authorization header');
-  }
-
-  const [username, password] = credentials.split(':');
-  if (!username || !password) {
-    return res.status(401).send('Unauthorized: Invalid credentials format in header');
-  }
+  const token = authHeader.split(' ')[1];
   
-  const authenticatedUser = users.find(u => u.username === username && u.password === password);
+  try {
+    const decodedPayload = jwt.verify(token, JWT_SECRET);
+    //  --- Authorization Succeeded ---
+    console.log('Access granted to user: ', decodedPayload.username);
+    const allUserData = users.map(u => ({
+      id: u.id,
+      firstName: u.firstName,
+      lastName: u.lastName
+    }));
 
-  if (!authenticatedUser) {
-    return res.status(401).send('Unauthorized: Invalid username or password provided in the auth header')
+    res.status(200).json({users: allUserData});
+  } catch (e) {
+    if (e instanceof jwt.TokenExpiredError) {
+      return res.status(401).send('Unauthorized: Token expired');
+    }
+    if (e instanceof jwt.JsonWebTokenError) {
+      // Invalid signature, malformed token etc.
+      return res.status(401).send('Unauthorized: Invalid token');
+    }
+    console.error("Error verifying JWT: ", e);
+    return res.status(500).send('Internal server error: Could not verify JWT token');
   }
-
-  //  --- Authorization Succeeded ---
-
-  const allUserData = users.map(u => ({
-    id: u.id,
-    firstName: u.firstName,
-    lastName: u.lastName
-  }));
-
-  res.status(200).json({users: allUserData});
 });
 
 app.use((req, res) => {
   res.status(404).send('Route not found');
 });
 
-app.listen(port, () => {
-  console.log(`Server started running on port ${port}`);
-});
+// app.listen(port, () => {
+//   console.log(`Server started running on port ${port}`);
+// });
 
 module.exports = app;
