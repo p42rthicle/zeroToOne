@@ -16,10 +16,47 @@
 
     Testing the server - run `npm run test-fileServer` command in terminal
  */
-    const express = require('express');
-    const fs = require('fs');
-    const path = require('path');
-    const app = express();
-    
-    
-    module.exports = app;
+const express = require('express');
+const fs = require('fs');
+const path = require('path');
+const app = express();
+
+app.get('/files', (req, res) => {
+  const customDir = req.query.dir;
+  const folderPath = customDir 
+                    ? path.join(__dirname, customDir) 
+                    : path.join(__dirname, 'files');
+        
+  
+  fs.readdir(folderPath, (err, files) => {
+    if (err) {
+      return res.status(500).json({error: "Failed to read the directory"});
+    }
+    res.status(200).json(files);
+  });
+});
+
+app.get('/file/:filename', (req, res) => {
+  const fileName = req.params.filename;
+  const customDir = req.query.dir;
+  const filePath = customDir 
+                    ? path.join(__dirname, customDir, fileName) 
+                    : path.join(__dirname, 'files', fileName);
+
+  fs.readFile(filePath, 'utf-8', (err, data) => {
+    if (err) {
+      if (err.code === 'ENOENT') { // File not found
+        return res.status(404).send('File not found');
+      }
+      return res.status(500).send('Server error');
+    }
+    res.status(200).send(data);
+  });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).send("Route not found");
+});
+
+module.exports = app;

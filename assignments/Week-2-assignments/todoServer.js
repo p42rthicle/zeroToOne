@@ -37,6 +37,7 @@ Example: DELETE http://localhost:3000/todos/123
 
 - For any other route not defined in the server return 404
 
+Run this after you have deleted the todos.json file. It works fine then - test cases will pass. 
 Testing the server - run `npm run test-todoServer` command in terminal
 */
 
