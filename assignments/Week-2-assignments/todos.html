@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Todo App</title>
+    <script>
+        async function fetchTodos() {
+        console.log("Fetching todos...");
+        
+        try {
+            const response = await fetch('http://localhost:3000/todos');
+            if (!response.ok) {
+                console.error("Failed to fetch todos:", response.statusText);
+                return;
+            }
+
+            const todos = await response.json();
+            console.log("Todos fetched:", todos);
+
+            const list = document.getElementById('todo-list');
+            list.innerHTML = '';
+
+            todos.forEach(todo => {
+                const item = document.createElement('li');
+                item.textContent = `${todo.title}: ${todo.description}`;
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.onclick = async () => {
+                    await fetch(`http://localhost:3000/todos/${todo.id}`, { method: 'DELETE' });
+                    fetchTodos();
+                };
+
+                item.appendChild(deleteButton);
+                list.appendChild(item);
+            });
+        } catch (error) {
+            console.error("Error fetching todos:", error);
+        }
+        }
+
+
+        async function addTodo() {
+            const title = document.getElementById('title').value;
+            const description = document.getElementById('description').value;
+
+            if (!title || !description) {
+                alert('Title and Description are required!');
+                return;
+            }
+
+            console.log("Sending request to add todo...");
+            
+            try {
+                const response = await fetch('http://localhost:3000/todos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, description })
+                });
+
+                const data = await response.json();
+                console.log("Response from server:", data);
+                
+                document.getElementById('title').value = '';
+                document.getElementById('description').value = '';
+                fetchTodos();
+            } catch (error) {
+                console.error("Error adding todo:", error);
+            }
+        }
+        
+        window.onload = fetchTodos;
+    </script>
+</head>
+<body>
+    <h1>Todo List</h1>
+    <input type="text" id="title" placeholder="Title" />
+    <input type="text" id="description" placeholder="Description" />
+    <button onclick="addTodo()">Add Todo</button>
+    <ul id="todo-list"></ul>
+</body>
+</html>

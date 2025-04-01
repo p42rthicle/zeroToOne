@@ -47,6 +47,9 @@ const fs = require('fs').promises;
 
 const app = express();
 const port = 3000;
+const cors = require('cors');
+
+app.use(cors());
 
 // Body parser middleware
 app.use(bodyParser.json());
@@ -102,10 +105,11 @@ async function addTodo(title, description) {
 }
 
 // Load todos immediately when module laods
-loadTodos().catch(err => console.error("Failed to load todos", err));
+// loadTodos().catch(err => console.error("Failed to load todos", err));
 
 // POST /todos - New item
 app.post('/todos', async (req, res) => {
+  console.log('Request body:', req.body);
   const { title, description } = req.body;
   if (!title || !description) {
     return res.status(400).send('Title and description are required');
@@ -164,6 +168,11 @@ app.get('/', (req, res) => {
 // 404 handler
 app.use((req, res) => {
   res.status(404).send("Route not found");
+});
+
+app.listen(port, () => {
+  console.log(`Server listening at http://localhost:${port}`);
+  loadTodos().catch(err => console.error("Failed to load todos", err));
 });
 
 module.exports = app;
